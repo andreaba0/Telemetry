@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"andreabarchietto.it/oss/go/telemetry_agent/internal/common"
 )
@@ -147,32 +146,12 @@ func calculateAllBusy(t1, t2 []TimesStat) ([]float64, error) {
 // Percent calculates the percentage of cpu used either per CPU or combined.
 // If an interval of 0 is given it will compare the current cpu times against the last call.
 // Returns one value per cpu, or a single value if percpu is set to false.
-func Percent(interval time.Duration, percpu bool) ([]float64, error) {
-	return PercentWithContext(context.Background(), interval, percpu)
+func Percent(percpu bool) ([]float64, error) {
+	return PercentWithContext(context.Background(), percpu)
 }
 
-func PercentWithContext(ctx context.Context, interval time.Duration, percpu bool) ([]float64, error) {
-	if interval <= 0 {
-		return percentUsedFromLastCallWithContext(ctx, percpu)
-	}
-
-	// Get CPU usage at the start of the interval.
-	cpuTimes1, err := TimesWithContext(ctx, percpu)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := common.Sleep(ctx, interval); err != nil {
-		return nil, err
-	}
-
-	// And at the end of the interval.
-	cpuTimes2, err := TimesWithContext(ctx, percpu)
-	if err != nil {
-		return nil, err
-	}
-
-	return calculateAllBusy(cpuTimes1, cpuTimes2)
+func PercentWithContext(ctx context.Context, percpu bool) ([]float64, error) {
+	return percentUsedFromLastCallWithContext(ctx, percpu)
 }
 
 func percentUsedFromLastCall(percpu bool) ([]float64, error) {
