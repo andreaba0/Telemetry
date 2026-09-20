@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "andreabarchietto.it/oss/go/Telemetry_Agent/proto";
+
+// Individual metric definitions
+message CpuMetric {
+  google.protobuf.Timestamp timestamp = 1;
+  double usage_percentage = 2; // Range: 0.0 to 100.0
+}
+
+message RamMetric {
+  google.protobuf.Timestamp timestamp = 1;
+  uint64 used_bytes = 2;
+  uint64 total_bytes = 3;
+}
+
+// Wrapper payload to allow streaming various metric types over a single stream
+message StreamMetricsRequest {
+  oneof metric {
+    CpuMetric cpu = 1;
+    RamMetric ram = 2;
+  }
+}
+
+message StreamMetricsResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// The gRPC Service Definition
+service MetricService {
+  // Streams any metric wrapped in StreamMetricsRequest
+  rpc StreamMetrics(stream StreamMetricsRequest) returns (StreamMetricsResponse);
+}
